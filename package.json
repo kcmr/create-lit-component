@@ -1,0 +1,45 @@
+{
+  "name": "create-lit-component",
+  "description": "Creates a LitElement Web Component",
+  "version": "0.0.0",
+  "author": "Kus Cámara @kcmr",
+  "bin": {
+    "lit-component": "./bin/run"
+  },
+  "bugs": "https://github.com/kcmr/create-lit-component/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.19",
+    "@oclif/config": "^1.13.3",
+    "@oclif/plugin-help": "^2.2.1",
+    "enquirer": "^2.3.2"
+  },
+  "devDependencies": {
+    "@oclif/test": "^1.2.5",
+    "chai": "^4.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-oclif": "^3.1.0",
+    "mocha": "^5.2.0",
+    "nyc": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/src"
+  ],
+  "homepage": "https://github.com/kcmr/create-lit-component",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "src/index.js",
+  "oclif": {
+    "bin": "lit-component"
+  },
+  "repository": "kcmr/create-lit-component",
+  "scripts": {
+    "posttest": "eslint .",
+    "test": "nyc mocha --forbid-only \"test/**/*.test.js\""
+  }
+}
