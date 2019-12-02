@@ -7,6 +7,8 @@ const copyTemplateDir = require('copy-template-dir')
 const {promisify} = require('util')
 const copyAsync = promisify(copyTemplateDir)
 const path = require('path')
+const execa = require('execa')
+const {cli} = require('cli-ux')
 
 const capitalize = string => string.charAt(0).toUpperCase() + string.slice(1)
 const camelCase = string => string.replace(/[-_]./g, match => match.charAt(1).toUpperCase())
@@ -29,7 +31,7 @@ class CreateLitComponentCommand extends Command {
 
     // read config found in user preferences saved from previous executions
     const userPrefs = new Conf({
-      projectName: this.name
+      projectName: this.name,
     })
     const commandPrefs = userPrefs.get(this.name) || {}
 
@@ -47,13 +49,18 @@ class CreateLitComponentCommand extends Command {
         message: 'Scope for the npm package',
         default: commandPrefs.scope,
       },
+      {
+        type: 'input',
+        name: 'description',
+        message: 'Component description',
+      },
     ].filter(missingParams)
 
     let responses = {}
 
     // if we have missing params, ask for them
     if (questions.length > 0) {
-      responses = await prompt(questions)
+      responses = await prompt(questions).catch(process.exit)
     }
 
     // mix the user responses with the params
@@ -71,13 +78,20 @@ class CreateLitComponentCommand extends Command {
 
     const tplVars = {
       component: options.name,
+      description: options.description,
       pkgName,
       componentClassName,
     }
 
     await copyAsync(templates, outputDir, tplVars)
-    this.log(`👍 Component created in ${options.name}!`)
-    this.log('Do not forget to install dependencies')
+    const subprocess = execa('npm', ['i'], {cwd: outputDir})
+    cli.action.start('Installing dependencies')
+
+    subprocess.on('close', () => {
+      cli.action.stop()
+      this.log(`👍 Component created in ${options.name}!`)
+      this.log('Run "npm start" from your component to launch its demo')
+    })
   }
 }
 
@@ -103,6 +117,11 @@ CreateLitComponentCommand.flags = {
   name: flags.string({
     char: 'n',
     description: 'Component name',
+  }),
+
+  description: flags.string({
+    char: 'd',
+    description: 'Component description',
   }),
 }
 

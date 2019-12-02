@@ -1,7 +1,7 @@
 {
   "name": "{{pkgName}}",
   "version": "0.0.0",
-  "description": "",
+  "description": "{{description}}",
   "module": "src/index.js",
   "main": "{{component}}.js",
   "files": [
