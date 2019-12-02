@@ -29,7 +29,8 @@
   },
   "files": [
     "/bin",
-    "/src"
+    "/src",
+    "/templates"
   ],
   "homepage": "https://github.com/kcmr/create-lit-component",
   "keywords": [
