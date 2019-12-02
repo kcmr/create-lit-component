@@ -3,6 +3,14 @@ const {prompt} = require('enquirer')
 const {cosmiconfig} = require('cosmiconfig')
 const explorer = cosmiconfig('lit-component')
 const Conf = require('conf')
+const copyTemplateDir = require('copy-template-dir')
+const {promisify} = require('util')
+const copyAsync = promisify(copyTemplateDir)
+const path = require('path')
+
+const capitalize = string => string.charAt(0).toUpperCase() + string.slice(1)
+const camelCase = string => string.replace(/[-_]./g, match => match.charAt(1).toUpperCase())
+const titleCase = string => capitalize(camelCase(string))
 
 class CreateLitComponentCommand extends Command {
   get name() {
@@ -20,7 +28,9 @@ class CreateLitComponentCommand extends Command {
     // this.log('config', config)
 
     // read config found in user preferences saved from previous executions
-    const userPrefs = new Conf()
+    const userPrefs = new Conf({
+      projectName: this.name
+    })
     const commandPrefs = userPrefs.get(this.name) || {}
 
     // check if we have all the required params
@@ -52,8 +62,22 @@ class CreateLitComponentCommand extends Command {
     // store the input for later usage
     userPrefs.set(`${this.name}.scope`, options.scope)
 
-    this.log('config', options)
+    const templates = path.join(__dirname, '..', 'templates')
+    const outputDir = path.join(process.cwd(), options.name)
 
+    const component = options.name
+    const pkgName = options.scope ? `${options.scope}/${component}` : component
+    const componentClassName = titleCase(component)
+
+    const tplVars = {
+      component: options.name,
+      pkgName,
+      componentClassName,
+    }
+
+    await copyAsync(templates, outputDir, tplVars)
+    this.log(`👍 Component created in ${options.name}!`)
+    this.log('Do not forget to install dependencies')
   }
 }
 
