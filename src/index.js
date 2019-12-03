@@ -9,10 +9,7 @@ const copyAsync = promisify(copyTemplateDir)
 const path = require('path')
 const execa = require('execa')
 const {cli} = require('cli-ux')
-
-const capitalize = string => string.charAt(0).toUpperCase() + string.slice(1)
-const camelCase = string => string.replace(/[-_]./g, match => match.charAt(1).toUpperCase())
-const titleCase = string => capitalize(camelCase(string))
+const {titleCase} = require('./string-utils');
 
 class CreateLitComponentCommand extends Command {
   get name() {
