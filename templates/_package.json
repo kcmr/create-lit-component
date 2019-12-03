@@ -11,16 +11,20 @@
   "scripts": {
     "test": "karma start --coverage",
     "test:watch": "karma start --auto-watch=true --single-run=false --coverage",
-    "start": "es-dev-server --watch --node-resolve --compatibility esm --open demo/"
+    "prestart": "rimraf dist",
+    "start": "parcel demo/index.html"
   },
   "dependencies": {
     "lit-element": "^2.0.0",
     "lit-html": "^1.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.7.4",
     "@open-wc/testing": "2.0.0",
     "@open-wc/testing-karma": "3.0.0",
-    "es-dev-server": "1.23.1",
+    "parcel-bundler": "^1.12.4",
+    "regenerator-runtime": "^0.13.3",
+    "rimraf": "^3.0.0",
     "webpack-merge": "4.1.5"
   }
 }
