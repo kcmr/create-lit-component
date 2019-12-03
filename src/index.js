@@ -9,6 +9,7 @@ const {titleCase} = require('./string-utils')
 const fs = require('fs')
 const path = require('path')
 const {promisify} = require('util')
+const elementNameValidator = require('validate-element-name')
 
 const copy = promisify(copyTemplateDir)
 const unlink = promisify(fs.unlink)
@@ -34,11 +35,13 @@ class CreateLitComponentCommand extends Command {
 
     // check if we have all the required params
     const missingParams = entry => !Object.keys(config).includes(entry.name)
+    const validateElementName = str => elementNameValidator(str).message || true
     const questions = [
       {
         type: 'input',
         name: 'name',
         message: 'Component name',
+        validate: validateElementName,
       },
       {
         type: 'confirm',

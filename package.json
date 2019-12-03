@@ -16,7 +16,8 @@
     "copy-template-dir": "^1.4.0",
     "cosmiconfig": "^6.0.0",
     "execa": "^3.4.0",
-    "inquirer": "^7.0.0"
+    "inquirer": "^7.0.0",
+    "validate-element-name": "^2.1.1"
   },
   "devDependencies": {
     "@oclif/test": "^1.2.5",
