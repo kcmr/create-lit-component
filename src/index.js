@@ -165,6 +165,13 @@ CreateLitComponentCommand.flags = {
     char: 'd',
     description: 'Component description',
   }),
+
+  install: flags.boolean({
+    char: 'i',
+    description: 'Install dependencies (true). Use --no-install to skip install',
+    default: true,
+    allowNo: true,
+  }),
 }
 
 module.exports = CreateLitComponentCommand
