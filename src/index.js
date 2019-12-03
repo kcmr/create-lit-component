@@ -29,13 +29,30 @@ class CreateLitComponentCommand extends Command {
     const {flags} = this.parse(CreateLitComponentCommand)
     const config = Object.assign(localConfig, flags)
 
+    const validateElementName = str => {
+      const result = elementNameValidator(str)
+
+      if (!result.isValid) {
+        return result.message
+      }
+
+      return true
+    }
+
+    if (config.name) {
+      const validationResult = validateElementName(config.name)
+
+      if (typeof validationResult === 'string') {
+        this.error(`Invalid name flag: ${config.name}\n${validationResult}`)
+      }
+    }
+
     // read config found in user preferences saved from previous executions
     const userPrefs = new Conf({projectName: this.name})
     const commandPrefs = userPrefs.get(this.name) || {}
 
     // check if we have all the required params
     const missingParams = entry => !Object.keys(config).includes(entry.name)
-    const validateElementName = str => elementNameValidator(str).message || true
     const questions = [
       {
         type: 'input',
@@ -73,7 +90,7 @@ class CreateLitComponentCommand extends Command {
 
     // if we have missing params, ask for them
     if (questions.length > 0) {
-      answers = await prompt(questions).catch(process.exit)
+      answers = await prompt(questions).catch(this.exit)
     }
 
     // mix the user answers with the params
