@@ -1,15 +1,17 @@
 const {Command, flags} = require('@oclif/command')
-const {prompt} = require('enquirer')
+const {prompt} = require('inquirer')
 const {cosmiconfig} = require('cosmiconfig')
-const explorer = cosmiconfig('lit-component')
 const Conf = require('conf')
 const copyTemplateDir = require('copy-template-dir')
-const {promisify} = require('util')
-const copyAsync = promisify(copyTemplateDir)
-const path = require('path')
 const execa = require('execa')
 const {cli} = require('cli-ux')
-const {titleCase} = require('./string-utils');
+const {titleCase} = require('./string-utils')
+const fs = require('fs')
+const path = require('path')
+const {promisify} = require('util')
+
+const copy = promisify(copyTemplateDir)
+const unlink = promisify(fs.unlink)
 
 class CreateLitComponentCommand extends Command {
   get name() {
@@ -18,18 +20,16 @@ class CreateLitComponentCommand extends Command {
 
   async run() {
     // read config found in files (.*rc, package.json, etc.)
+    const explorer = cosmiconfig(this.name)
     const configInFiles = await explorer.search(this.name)
     const localConfig = configInFiles ? configInFiles.config : {}
 
     // override local config with flags (always have precedence)
     const {flags} = this.parse(CreateLitComponentCommand)
     const config = Object.assign(localConfig, flags)
-    // this.log('config', config)
 
     // read config found in user preferences saved from previous executions
-    const userPrefs = new Conf({
-      projectName: this.name,
-    })
+    const userPrefs = new Conf({projectName: this.name})
     const commandPrefs = userPrefs.get(this.name) || {}
 
     // check if we have all the required params
@@ -41,33 +41,48 @@ class CreateLitComponentCommand extends Command {
         message: 'Component name',
       },
       {
+        type: 'confirm',
+        name: 'useScope',
+        message: 'Do you want to use a scope for the npm package?',
+        default: false,
+      },
+      {
         type: 'input',
         name: 'scope',
         message: 'Scope for the npm package',
         default: commandPrefs.scope,
+        when: answers => answers.useScope,
       },
       {
         type: 'input',
         name: 'description',
         message: 'Component description',
       },
+      {
+        type: 'confirm',
+        name: 'install',
+        message: 'Do you want to install dependencies?',
+        default: true,
+      },
     ].filter(missingParams)
 
-    let responses = {}
+    let answers = {}
 
     // if we have missing params, ask for them
     if (questions.length > 0) {
-      responses = await prompt(questions).catch(process.exit)
+      answers = await prompt(questions).catch(process.exit)
     }
 
-    // mix the user responses with the params
-    const options = Object.assign(config, responses)
+    // mix the user answers with the params
+    const options = Object.assign(config, answers)
 
     // store the input for later usage
-    userPrefs.set(`${this.name}.scope`, options.scope)
+    if (options.scope) {
+      userPrefs.set(`${this.name}.scope`, options.scope)
+    }
 
     const templates = path.join(__dirname, '..', 'templates')
-    const outputDir = path.join(process.cwd(), options.name)
+    const destDir = path.join(process.cwd(), options.name)
 
     const component = options.name
     const pkgName = options.scope ? `${options.scope}/${component}` : component
@@ -80,15 +95,26 @@ class CreateLitComponentCommand extends Command {
       componentClassName,
     }
 
-    await copyAsync(templates, outputDir, tplVars)
-    const subprocess = execa('npm', ['i'], {cwd: outputDir})
-    cli.action.start('Installing dependencies')
+    const output = await copy(templates, destDir, tplVars)
+    // delete .git file (git submodule)
+    const [dotGitFile] = output.filter(file => file.endsWith('.git'))
+    await unlink(dotGitFile)
 
-    subprocess.on('close', () => {
-      cli.action.stop()
-      this.log(`👍 Component created in ${options.name}!`)
-      this.log('Run "npm start" from your component to launch its demo')
-    })
+    const successMessage = () => this.log(`\n👍 Component created in ${options.name}!\n`)
+
+    if (options.install) {
+      const subprocess = execa('npm', ['i'], {cwd: destDir})
+      cli.action.start('Installing dependencies')
+
+      subprocess.on('close', () => {
+        cli.action.stop()
+        successMessage()
+        this.log('Run "npm start" from your component to launch its demo\n')
+      })
+    } else {
+      successMessage()
+      this.log('Don\'t forget to install dependencies before launching its demo with "npm start"\n')
+    }
   }
 }
 
@@ -108,7 +134,6 @@ CreateLitComponentCommand.flags = {
     char: 's',
     description: 'Scope for the npm package',
     parse: input => input.charAt(0) === '@' ? input : `@${input}`,
-    required: false,
   }),
 
   name: flags.string({
