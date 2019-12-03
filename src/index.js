@@ -15,50 +15,63 @@ const copy = promisify(copyTemplateDir)
 const unlink = promisify(fs.unlink)
 
 class CreateLitComponentCommand extends Command {
-  get name() {
-    return 'lit-component'
+  constructor() {
+    super(...arguments)
+    this.name = 'lit-component'
+    this.userPrefs = new Conf({projectName: this.name})
   }
 
   async run() {
+    const params = await this.getParams()
+
+    if (params.name) {
+      this.exitOnInvalidName(params.name)
+    }
+
+    const options = await this.requestMissingParams(params)
+    this.saveUserPreferences(options)
+
+    await this.writeComponent(options)
+  }
+
+  async getParams() {
     // read config found in files (.*rc, package.json, etc.)
     const explorer = cosmiconfig(this.name)
     const configInFiles = await explorer.search(this.name)
     const localConfig = configInFiles ? configInFiles.config : {}
 
-    // override local config with flags (always have precedence)
+    // override local config with flags
     const {flags} = this.parse(CreateLitComponentCommand)
-    const config = Object.assign(localConfig, flags)
+    return Object.assign(localConfig, flags)
+  }
 
-    const validateElementName = str => {
-      const result = elementNameValidator(str)
+  exitOnInvalidName(name) {
+    const validationResult = this.validateElementName(name)
 
-      if (!result.isValid) {
-        return result.message
-      }
+    if (typeof validationResult === 'string') {
+      this.error(`Invalid name flag: ${name}\n${validationResult}`)
+    }
+  }
 
-      return true
+  validateElementName(name) {
+    const result = elementNameValidator(name)
+
+    if (!result.isValid) {
+      return result.message
     }
 
-    if (config.name) {
-      const validationResult = validateElementName(config.name)
+    return true
+  }
 
-      if (typeof validationResult === 'string') {
-        this.error(`Invalid name flag: ${config.name}\n${validationResult}`)
-      }
-    }
-
-    // read config found in user preferences saved from previous executions
-    const userPrefs = new Conf({projectName: this.name})
-    const commandPrefs = userPrefs.get(this.name) || {}
-
-    // check if we have all the required params
-    const missingParams = entry => !Object.keys(config).includes(entry.name)
+  async requestMissingParams(params) {
+    const userPrefs = this.getStoredPreferences()
+    let answers = {}
     const questions = [
       {
         type: 'input',
         name: 'name',
         message: 'Component name',
-        validate: validateElementName,
+        validate: this.validateElementName,
       },
       {
         type: 'confirm',
@@ -70,7 +83,7 @@ class CreateLitComponentCommand extends Command {
         type: 'input',
         name: 'scope',
         message: 'Scope for the npm package',
-        default: commandPrefs.scope,
+        default: userPrefs.scope,
         when: answers => answers.useScope,
       },
       {
@@ -84,57 +97,62 @@ class CreateLitComponentCommand extends Command {
         message: 'Do you want to install dependencies?',
         default: true,
       },
-    ].filter(missingParams)
+    ]
 
-    let answers = {}
+    const notInParams = entry => !Object.keys(params).includes(entry.name)
+    const missingParams = questions.filter(notInParams)
 
-    // if we have missing params, ask for them
-    if (questions.length > 0) {
-      answers = await prompt(questions).catch(this.exit)
+    if (missingParams.length > 0) {
+      answers = await prompt(missingParams).catch(this.exit)
     }
 
     // mix the user answers with the params
-    const options = Object.assign(config, answers)
+    return Object.assign(params, answers)
+  }
 
-    // store the input for later usage
+  getStoredPreferences() {
+    return this.userPrefs.get(this.name) || {}
+  }
+
+  saveUserPreferences(options) {
     if (options.scope) {
-      userPrefs.set(`${this.name}.scope`, options.scope)
+      this.userPrefs.set(`${this.name}.scope`, options.scope)
     }
+  }
 
+  async writeComponent(options) {
     const templates = path.join(__dirname, '..', 'templates')
     const destDir = path.join(process.cwd(), options.name)
 
     const component = options.name
+    const description = options.description
     const pkgName = options.scope ? `${options.scope}/${component}` : component
     const componentClassName = titleCase(component)
+    const templateVars = {component, description, pkgName, componentClassName}
+    const output = await copy(templates, destDir, templateVars)
 
-    const tplVars = {
-      component: options.name,
-      description: options.description,
-      pkgName,
-      componentClassName,
-    }
-
-    const output = await copy(templates, destDir, tplVars)
     // delete .git file (git submodule)
     const [dotGitFile] = output.filter(file => file.endsWith('.git'))
     await unlink(dotGitFile)
 
-    const successMessage = () => this.log(`\n👍 Component created in ${options.name}!\n`)
+    this.afterWrite(options, destDir)
+  }
 
-    if (options.install) {
-      const subprocess = execa('npm', ['i'], {cwd: destDir})
-      cli.action.start('Installing dependencies')
-
-      subprocess.on('close', () => {
-        cli.action.stop()
-        successMessage()
-        this.log('Run "npm start" from your component to launch its demo\n')
-      })
-    } else {
-      successMessage()
+  afterWrite(options, destDir) {
+    if (!options.install) {
+      this.log(`\n👍 Component created in ${options.name}!\n`)
       this.log('Don\'t forget to install dependencies before launching its demo with "npm start"\n')
+      return
     }
+
+    const subprocess = execa('npm', ['i'], {cwd: destDir})
+    cli.action.start('Installing dependencies')
+
+    subprocess.on('close', () => {
+      cli.action.stop()
+      this.log(`\n👍 Component created in ${options.name}!\n`)
+      this.log('Run "npm start" from your component to launch its demo\n')
+    })
   }
 }
 
