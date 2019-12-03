@@ -46,6 +46,7 @@
   "repository": "kcmr/create-lit-component",
   "scripts": {
     "posttest": "eslint .",
-    "test": "nyc mocha --forbid-only \"test/**/*.test.js\""
+    "test": "nyc mocha --forbid-only \"test/**/*.test.js\"",
+    "update-templates": "git submodule update --remote"
   }
 }
