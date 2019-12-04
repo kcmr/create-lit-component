@@ -91,12 +91,6 @@ class CreateLitComponentCommand extends Command {
         name: 'description',
         message: 'Component description',
       },
-      {
-        type: 'confirm',
-        name: 'install',
-        message: 'Do you want to install dependencies?',
-        default: true,
-      },
     ]
 
     const notInParams = entry => !Object.keys(params).includes(entry.name)
