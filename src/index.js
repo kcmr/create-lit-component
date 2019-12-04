@@ -121,7 +121,7 @@ class CreateLitComponentCommand extends Command {
   }
 
   async writeComponent(options) {
-    const templates = path.join(__dirname, '..', 'templates')
+    const srcDir = path.join(__dirname, '..', 'templates')
     const destDir = path.join(process.cwd(), options.name)
 
     const component = options.name
@@ -129,7 +129,7 @@ class CreateLitComponentCommand extends Command {
     const pkgName = options.scope ? `${options.scope}/${component}` : component
     const componentClassName = titleCase(component)
     const templateVars = {component, description, pkgName, componentClassName}
-    const output = await copy(templates, destDir, templateVars)
+    const output = await copy(srcDir, destDir, templateVars)
 
     // delete .git file (git submodule)
     const [dotGitFile] = output.filter(file => file.endsWith('.git'))
@@ -141,7 +141,7 @@ class CreateLitComponentCommand extends Command {
   afterWrite(options, destDir) {
     if (!options.install) {
       this.log(`\n👍 Component created in ${options.name}!\n`)
-      this.log('Don\'t forget to install dependencies before launching its demo with "npm start"\n')
+      this.log('Don\'t forget to install dependencies before running "npm start"\n')
       return
     }
 
@@ -151,14 +151,16 @@ class CreateLitComponentCommand extends Command {
     subprocess.on('close', () => {
       cli.action.stop()
       this.log(`\n👍 Component created in ${options.name}!\n`)
-      this.log('Run "npm start" from your component to launch its demo\n')
+      this.log(`Run "npm start" from ${options.name} to start the dev server\n`)
     })
   }
 }
 
-CreateLitComponentCommand.description = `Creates a LitElement Web Component using @open-wc recommendations
+CreateLitComponentCommand.description = `LitElement component generator
 ...
-This is an example for a CLI workshop
+Creates a LitElement Web Component using some @open-wc recommendations and Parcel bundler for the dev server (demo).
+All of the flags are optional. You will be prompted for the required params.
+Run it with "--no-install" boolean flag to skip dependency installation.
 `
 
 CreateLitComponentCommand.flags = {
@@ -170,23 +172,23 @@ CreateLitComponentCommand.flags = {
 
   scope: flags.string({
     char: 's',
-    description: 'Scope for the npm package',
+    description: 'scope for the npm package',
     parse: input => input.charAt(0) === '@' ? input : `@${input}`,
   }),
 
   name: flags.string({
     char: 'n',
-    description: 'Component name',
+    description: 'component name',
   }),
 
   description: flags.string({
     char: 'd',
-    description: 'Component description',
+    description: 'component description',
   }),
 
   install: flags.boolean({
     char: 'i',
-    description: 'Install dependencies (true). Use --no-install to skip install',
+    description: 'install dependencies',
     default: true,
     allowNo: true,
   }),
