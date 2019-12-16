@@ -13,6 +13,7 @@ const elementNameValidator = require('validate-element-name')
 
 const copy = promisify(copyTemplateDir)
 const unlink = promisify(fs.unlink)
+const parseScope = value => value.charAt(0) === '@' ? value : `@${value}`
 
 class CreateLitComponentCommand extends Command {
   constructor() {
@@ -77,7 +78,7 @@ class CreateLitComponentCommand extends Command {
         type: 'confirm',
         name: 'useScope',
         message: 'Do you want to use a scope for the npm package?',
-        default: false,
+        default: userPrefs.useScope,
       },
       {
         type: 'input',
@@ -85,6 +86,7 @@ class CreateLitComponentCommand extends Command {
         message: 'Scope for the npm package',
         default: userPrefs.scope,
         when: answers => answers.useScope,
+        transformer: input => parseScope(input),
       },
       {
         type: 'input',
@@ -108,10 +110,12 @@ class CreateLitComponentCommand extends Command {
     return this.userPrefs.get(this.name) || {}
   }
 
-  saveUserPreferences(options) {
-    if (options.scope) {
-      this.userPrefs.set(`${this.name}.scope`, options.scope)
+  saveUserPreferences({scope}) {
+    if (scope) {
+      this.userPrefs.set(`${this.name}.scope`, parseScope(scope))
     }
+
+    this.userPrefs.set(`${this.name}.useScope`, Boolean(scope))
   }
 
   async writeComponent(options) {
@@ -120,7 +124,7 @@ class CreateLitComponentCommand extends Command {
 
     const component = options.name
     const description = options.description
-    const pkgName = options.scope ? `${options.scope}/${component}` : component
+    const pkgName = options.scope ? `${parseScope(options.scope)}/${component}` : component
     const componentClassName = titleCase(component)
     const templateVars = {component, description, pkgName, componentClassName}
     const output = await copy(srcDir, destDir, templateVars)
@@ -175,7 +179,6 @@ CreateLitComponentCommand.flags = {
   scope: flags.string({
     char: 's',
     description: 'scope for the npm package',
-    parse: input => input.charAt(0) === '@' ? input : `@${input}`,
   }),
 
   name: flags.string({
