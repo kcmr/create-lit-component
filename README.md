@@ -45,6 +45,27 @@ CLI:
 - `-h`, `--help` Shows the CLI help
 - `-v`, `--version` Shows the CLI version
 
-## Config files
+## Config files or key in `package.json`
+
+The CLI will remember the choices of the last execution with your preferences about the package scope but you can also use configuration files or a specific property in a `package.json` file.
+
+- `lit-component` property in a `package.json`
+- `.lit-componentrc` (JSON or YAML format)
+- `.lit-componentrc.json`
+- `.lit-componentrc.yaml`, `.lit-componentrc.yml`
+- `.lit-componentrc.js`
+- `lit-component.config.js`
+
+Example config:
+
+```json
+{
+  "scope": "@my-company",
+  "description": "An awesome component",
+  "install": false
+}
+```
+
+
 
 
