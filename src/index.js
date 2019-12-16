@@ -147,7 +147,7 @@ class CreateLitComponentCommand extends Command {
     if (options.silent) {
       cli.action.start('Installing dependencies')
     } else {
-      this.log('\nInstalling dependencies\n');
+      this.log('\nInstalling dependencies\n')
     }
 
     subprocess.on('close', () => {
