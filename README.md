@@ -39,6 +39,7 @@ Component:
 - `-d`, `--description` Component description (used in description field inside package.json)
 - `-s`, `--scope` Optional package scope (`@my-company`)
 - `-i`, `--[no-]install` Install dependencies (`true`). Use `--no-install` to skip dependency installation
+- `--silent` Use silent dependency installation
 
 CLI:
 - `-h`, `--help` Shows the CLI help

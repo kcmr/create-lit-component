@@ -139,8 +139,16 @@ class CreateLitComponentCommand extends Command {
       return
     }
 
-    const subprocess = execa('npm', ['i'], {cwd: destDir})
-    cli.action.start('Installing dependencies')
+    const subprocess = execa('npm', ['i'], {
+      cwd: destDir,
+      stdio: options.silent ? 'pipe' : 'inherit',
+    })
+
+    if (options.silent) {
+      cli.action.start('Installing dependencies')
+    } else {
+      this.log('\nInstalling dependencies\n');
+    }
 
     subprocess.on('close', () => {
       cli.action.stop()
@@ -185,6 +193,11 @@ CreateLitComponentCommand.flags = {
     description: 'install dependencies',
     default: true,
     allowNo: true,
+  }),
+
+  silent: flags.boolean({
+    description: 'silent dependency installation',
+    default: false,
   }),
 }
 
