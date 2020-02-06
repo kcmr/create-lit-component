@@ -20,6 +20,7 @@ class CreateLitComponentCommand extends Command {
     super(...arguments)
     this.name = 'lit-component'
     this.userPrefs = new Conf({projectName: this.name})
+    this.templatesDir = path.join(__dirname, '..', 'templates')
   }
 
   async run() {
@@ -119,7 +120,7 @@ class CreateLitComponentCommand extends Command {
   }
 
   async writeComponent(options) {
-    const srcDir = path.join(__dirname, '..', 'templates')
+    const srcDir = this.templatesDir
     const destDir = path.join(process.cwd(), options.name)
 
     const component = options.name
