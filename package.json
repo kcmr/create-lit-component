@@ -1,5 +1,5 @@
 {
-  "name": "create-lit-component",
+  "name": "@kcmr/create-lit-component",
   "description": "Creates a LitElement Web Component",
   "version": "0.1.0",
   "author": "Kus Cámara @kcmr",
