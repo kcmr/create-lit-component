@@ -44,7 +44,7 @@
   "oclif": {
     "bin": "lit-component"
   },
-  "repository": "kcmr/create-lit-component",
+  "repository": "git://github.com/kcmr/create-lit-component.git",
   "scripts": {
     "posttest": "eslint .",
     "test": "nyc mocha --forbid-only \"test/**/*.test.js\"",
