@@ -1,5 +1,5 @@
 {
-  "name": "@kcmr/create-lit-component",
+  "name": "@kuscamara/create-lit-component",
   "description": "Creates a LitElement Web Component",
   "version": "0.1.2",
   "author": "Kus Cámara @kcmr",
@@ -51,7 +51,6 @@
     "update-templates": "git submodule update --remote"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/",
     "access": "public"
   }
 }
