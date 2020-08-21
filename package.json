@@ -1,7 +1,7 @@
 {
   "name": "@kuscamara/create-lit-component",
   "description": "Creates a LitElement Web Component",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": "Kus Cámara @kcmr",
   "bin": {
     "lit-component": "./bin/run"
