@@ -1,7 +1,7 @@
 {
   "name": "create-lit-component",
   "description": "Creates a LitElement Web Component",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "author": "Kus Cámara @kcmr",
   "bin": {
     "lit-component": "./bin/run"
